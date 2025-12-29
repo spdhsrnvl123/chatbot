@@ -1,6 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-
 interface Message {
   type: "bot" | "user";
   text: string;
@@ -18,7 +16,6 @@ interface MenuItem {
 }
 
 function Chatbot() {
-  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([
     {
       type: "bot",
