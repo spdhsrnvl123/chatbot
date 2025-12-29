@@ -86,7 +86,7 @@ function Chatbot() {
   };
 
   const handleDetailClick = (detailType: string) => {
-    navigate(`/${detailType}`);
+    window.parent.postMessage({ action: "openPopup", type: detailType }, "*");
   };
 
   return (
