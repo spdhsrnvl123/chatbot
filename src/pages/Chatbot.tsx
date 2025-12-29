@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 interface Message {
   type: "bot" | "user";
   text: string;
@@ -16,6 +18,7 @@ interface MenuItem {
 }
 
 function Chatbot() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([
     {
       type: "bot",
@@ -83,7 +86,14 @@ function Chatbot() {
   };
 
   const handleDetailClick = (detailType: string) => {
-    window.parent.postMessage({ action: "openPopup", type: detailType }, "*");
+    // iframe 안에 있는지 확인
+    if (window.parent !== window) {
+      // iframe 안이면 JSP에 메시지 보내기
+      window.parent.postMessage({ action: "openPopup", type: detailType }, "*");
+    } else {
+      // 단독 실행이면 페이지 이동
+      navigate(`/${detailType}`);
+    }
   };
 
   return (
