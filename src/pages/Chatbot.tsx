@@ -7,6 +7,7 @@ interface Message {
   showMenu?: boolean;
   showDetail?: boolean;
   detailType?: string;
+  isNew?: boolean;
 }
 
 interface MenuItem {
@@ -24,8 +25,10 @@ function Chatbot() {
       type: "bot",
       text: "👋 안녕하세요! 건설산업교육원입니다.\n궁금한 게 있으신가요?",
       showMenu: true,
+      isNew: true,
     },
   ]);
+  const [isTyping, setIsTyping] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +38,7 @@ function Chatbot() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const menuItems: MenuItem[] = [
     {
@@ -72,26 +75,36 @@ function Chatbot() {
   ];
 
   const handleMenuClick = (item: MenuItem) => {
-    setMessages([
-      ...messages.map((msg) => ({ ...msg, showMenu: false })),
-      { type: "user", text: item.label },
-      {
-        type: "bot",
-        text: item.response,
-        showMenu: true,
-        showDetail: item.hasDetail,
-        detailType: item.detailType,
-      },
+    // 유저 메시지 추가
+    setMessages((prev) => [
+      ...prev.map((msg) => ({ ...msg, showMenu: false, isNew: false })),
+      { type: "user", text: item.label, isNew: true },
     ]);
+
+    // 타이핑 표시
+    setIsTyping(true);
+
+    // 0.5초 후 봇 응답
+    setTimeout(() => {
+      setIsTyping(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: "bot",
+          text: item.response,
+          showMenu: true,
+          showDetail: item.hasDetail,
+          detailType: item.detailType,
+          isNew: true,
+        },
+      ]);
+    }, 500);
   };
 
   const handleDetailClick = (detailType: string) => {
-    // iframe 안에 있는지 확인
     if (window.parent !== window) {
-      // iframe 안이면 JSP에 메시지 보내기
       window.parent.postMessage({ action: "openPopup", type: detailType }, "*");
     } else {
-      // 단독 실행이면 페이지 이동
       navigate(`/${detailType}`);
     }
   };
@@ -104,17 +117,22 @@ function Chatbot() {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((msg, idx) => (
-          <div key={idx}>
+          <div key={idx} className={msg.isNew ? "animate-slideUp" : ""}>
             <div
               className={`flex ${
                 msg.type === "user" ? "justify-end" : "justify-start"
               }`}
             >
+              {msg.type === "bot" && (
+                <div className="w-8 h-8 bg-[#34bf87] rounded-full flex items-center justify-center mr-2 text-white text-sm">
+                  🏗️
+                </div>
+              )}
               <div
-                className={`max-w-[80%] p-3 rounded-2xl whitespace-pre-line ${
+                className={`max-w-[70%] p-3 rounded-2xl whitespace-pre-line ${
                   msg.type === "bot"
-                    ? "bg-[#34bf87] text-white rounded-tl-none"
-                    : "bg-white text-gray-800 rounded-tr-none shadow"
+                    ? "bg-white text-gray-800 shadow"
+                    : "bg-[#34bf87] text-white"
                 }`}
               >
                 {msg.text}
@@ -122,7 +140,7 @@ function Chatbot() {
             </div>
 
             {msg.showDetail && msg.type === "bot" && msg.detailType && (
-              <div className="mt-2 ml-1">
+              <div className="mt-2 ml-10">
                 <button
                   onClick={() => handleDetailClick(msg.detailType!)}
                   className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs hover:bg-gray-300 transition-colors"
@@ -133,12 +151,12 @@ function Chatbot() {
             )}
 
             {msg.showMenu && msg.type === "bot" && (
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-3 ml-10 flex flex-wrap gap-2">
                 {menuItems.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => handleMenuClick(item)}
-                    className="px-3 py-2 bg-white border border-[#34bf87] text-[#34bf87] rounded-full text-sm hover:bg-[#34bf87] hover:text-white transition-colors"
+                    className="px-3 py-2 bg-white border border-[#34bf87] text-[#34bf87] rounded-full text-sm hover:bg-[#34bf87] hover:text-white transition-colors shadow-sm"
                   >
                     {item.label}
                   </button>
@@ -147,6 +165,32 @@ function Chatbot() {
             )}
           </div>
         ))}
+
+        {/* 타이핑 인디케이터 */}
+        {isTyping && (
+          <div className="flex justify-start animate-slideUp">
+            <div className="w-8 h-8 bg-[#34bf87] rounded-full flex items-center justify-center mr-2 text-white text-sm">
+              🏗️
+            </div>
+            <div className="bg-white p-3 rounded-2xl shadow">
+              <div className="flex space-x-1">
+                <div
+                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
     </div>
