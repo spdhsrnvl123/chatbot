@@ -1,9 +1,9 @@
 import { Routes, Route } from "react-router-dom";
-import Chatbot from "./pages/Chatbot";
-import Course from "./pages/Course";
-import Enrollment from "./pages/Enrollment";
-import Refund from "./pages/Refund";
-import Customer from "./pages/Customer";
+import Chatbot from "./pages/chatbot-page";
+import Course from "./pages/course-page";
+import Enrollment from "./pages/enrollment-page";
+import Refund from "./pages/refund-page";
+import Customer from "./pages/customer-page";
 
 function App() {
   return (
